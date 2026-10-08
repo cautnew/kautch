@@ -28,6 +28,7 @@ class RouteResource extends JsonResource
             'page_id' => $this->page_id,
             'asset_id' => $this->asset_id,
             'redirect_to_route_id' => $this->redirect_to_route_id,
+            'redirect_url' => $this->redirect_url,
             'created_by' => $this->created_by,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

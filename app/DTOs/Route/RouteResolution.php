@@ -43,6 +43,17 @@ final readonly class RouteResolution
         return new self(RouteResolutionOutcome::Redirect, $matched, $final, $matched->http_status);
     }
 
+    /**
+     * The matched route's chain resolves to $final, a redirect whose
+     * redirect_url is the external destination. $matched's own http_status
+     * is used, same as an internal redirect() — it's the status the entry
+     * point of the chain was configured with.
+     */
+    public static function externalRedirect(Route $matched, Route $final): self
+    {
+        return new self(RouteResolutionOutcome::ExternalRedirect, $matched, $final, $matched->http_status);
+    }
+
     public static function loopDetected(Route $matched): self
     {
         return new self(RouteResolutionOutcome::LoopDetected, $matched, null, 508);

@@ -18,6 +18,14 @@ final readonly class RouteChainResult
         return new self(RouteChainOutcome::Resolved, $route, $hops);
     }
 
+    /**
+     * $route is the redirect whose redirect_url holds the external destination.
+     */
+    public static function externalRedirect(Route $route, int $hops): self
+    {
+        return new self(RouteChainOutcome::ExternalRedirect, $route, $hops);
+    }
+
     public static function loop(int $hops): self
     {
         return new self(RouteChainOutcome::Loop, null, $hops);

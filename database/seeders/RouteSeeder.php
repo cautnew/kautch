@@ -28,7 +28,7 @@ class RouteSeeder extends Seeder
 {
     public function run(): void
     {
-        $website = Website::query()->where('domain', WebsiteSeeder::DOMAIN)->firstOrFail();
+        $website = Website::query()->where('domain', WebsiteSeeder::domain())->firstOrFail();
         $admin = User::query()->where('email', 'admin.demo@kautch.test')->firstOrFail();
 
         $pages = Page::query()->where('website_id', $website->id)->get()->keyBy('slug');

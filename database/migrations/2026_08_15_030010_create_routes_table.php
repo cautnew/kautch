@@ -24,6 +24,7 @@ return new class extends Migration
             $table->foreignUuid('page_id')->nullable()->constrained('pages')->cascadeOnDelete();
             $table->foreignUuid('asset_id')->nullable()->constrained('assets')->cascadeOnDelete();
             $table->foreignUuid('redirect_to_route_id')->nullable()->constrained('routes')->nullOnDelete();
+            $table->string('redirect_url', 2048)->nullable();
             $table->unsignedSmallInteger('http_status')->default(200);
             UserstampSchema::columns($table);
             $table->timestamps();
@@ -32,7 +33,7 @@ return new class extends Migration
             $table->unique(['website_id', 'path', 'http_method']);
             $table->index(['website_id', 'destination_type']);
 
-            $table->comment('URL routing table: maps a path+method to a page, an asset, or a redirect to another route.');
+            $table->comment('URL routing table: maps a path+method to a page, an asset, or a redirect to another route or an external URL.');
         });
 
         // Enforced via triggers, not a CHECK constraint: MariaDB (error 1901) refuses a CHECK that
@@ -44,17 +45,18 @@ return new class extends Migration
                 FOR EACH ROW
                 BEGIN
                     IF (
-                        (NEW.page_id IS NOT NULL) + (NEW.asset_id IS NOT NULL) + (NEW.redirect_to_route_id IS NOT NULL)
+                        (NEW.page_id IS NOT NULL) + (NEW.asset_id IS NOT NULL)
+                        + (NEW.redirect_to_route_id IS NOT NULL) + (NEW.redirect_url IS NOT NULL)
                     ) != 1 THEN
                         SIGNAL SQLSTATE '45000'
-                            SET MESSAGE_TEXT = 'A route must point to exactly one of page_id, asset_id, or redirect_to_route_id.';
+                            SET MESSAGE_TEXT = 'A route must point to exactly one of page_id, asset_id, redirect_to_route_id, or redirect_url.';
                     END IF;
 
                     IF (NEW.destination_type = 'page' AND NEW.page_id IS NULL)
                         OR (NEW.destination_type = 'asset' AND NEW.asset_id IS NULL)
-                        OR (NEW.destination_type = 'redirect' AND NEW.redirect_to_route_id IS NULL) THEN
+                        OR (NEW.destination_type = 'redirect' AND NEW.redirect_to_route_id IS NULL AND NEW.redirect_url IS NULL) THEN
                         SIGNAL SQLSTATE '45000'
-                            SET MESSAGE_TEXT = 'destination_type must match whichever of page_id/asset_id/redirect_to_route_id is set.';
+                            SET MESSAGE_TEXT = 'destination_type must match whichever of page_id/asset_id/redirect_to_route_id/redirect_url is set.';
                     END IF;
                 END"
         );
@@ -65,17 +67,18 @@ return new class extends Migration
                 FOR EACH ROW
                 BEGIN
                     IF (
-                        (NEW.page_id IS NOT NULL) + (NEW.asset_id IS NOT NULL) + (NEW.redirect_to_route_id IS NOT NULL)
+                        (NEW.page_id IS NOT NULL) + (NEW.asset_id IS NOT NULL)
+                        + (NEW.redirect_to_route_id IS NOT NULL) + (NEW.redirect_url IS NOT NULL)
                     ) != 1 THEN
                         SIGNAL SQLSTATE '45000'
-                            SET MESSAGE_TEXT = 'A route must point to exactly one of page_id, asset_id, or redirect_to_route_id.';
+                            SET MESSAGE_TEXT = 'A route must point to exactly one of page_id, asset_id, redirect_to_route_id, or redirect_url.';
                     END IF;
 
                     IF (NEW.destination_type = 'page' AND NEW.page_id IS NULL)
                         OR (NEW.destination_type = 'asset' AND NEW.asset_id IS NULL)
-                        OR (NEW.destination_type = 'redirect' AND NEW.redirect_to_route_id IS NULL) THEN
+                        OR (NEW.destination_type = 'redirect' AND NEW.redirect_to_route_id IS NULL AND NEW.redirect_url IS NULL) THEN
                         SIGNAL SQLSTATE '45000'
-                            SET MESSAGE_TEXT = 'destination_type must match whichever of page_id/asset_id/redirect_to_route_id is set.';
+                            SET MESSAGE_TEXT = 'destination_type must match whichever of page_id/asset_id/redirect_to_route_id/redirect_url is set.';
                     END IF;
                 END"
         );

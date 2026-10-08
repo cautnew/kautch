@@ -53,6 +53,28 @@ it('resolves a redirect to its immediate target path', function () {
         ->assertJsonPath('data.redirect_to', '/new-home');
 });
 
+it('resolves a redirect to an external URL', function () {
+    $website = Website::factory()->create();
+    Route::factory()->externalRedirect('https://www.exemplo.com.br/site', 302)->create(['website_id' => $website->id, 'path' => '/vai-embora']);
+
+    $this->getJson(route('api.v1.websites.routes.resolve', $website).'?path=/vai-embora')
+        ->assertSuccessful()
+        ->assertJsonPath('data.outcome', 'external_redirect')
+        ->assertJsonPath('data.http_status', 302)
+        ->assertJsonPath('data.redirect_to', 'https://www.exemplo.com.br/site');
+});
+
+it('follows an internal redirect chain that ends at an external URL', function () {
+    $website = Website::factory()->create();
+    $external = Route::factory()->externalRedirect('https://www.exemplo.com.br/destino')->create(['website_id' => $website->id]);
+    Route::factory()->redirectingTo($external)->create(['website_id' => $website->id, 'path' => '/entrada']);
+
+    $this->getJson(route('api.v1.websites.routes.resolve', $website).'?path=/entrada')
+        ->assertSuccessful()
+        ->assertJsonPath('data.outcome', 'external_redirect')
+        ->assertJsonPath('data.redirect_to', 'https://www.exemplo.com.br/destino');
+});
+
 it('follows a chain of redirects to the final destination', function () {
     $website = Website::factory()->create();
     $page = Page::factory()->create(['website_id' => $website->id]);
