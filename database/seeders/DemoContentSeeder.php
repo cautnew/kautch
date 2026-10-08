@@ -68,7 +68,7 @@ class DemoContentSeeder extends Seeder
     {
         $this->call(WebsiteSeeder::class);
 
-        $website = Website::query()->where('domain', WebsiteSeeder::DOMAIN)->firstOrFail();
+        $website = Website::query()->where('domain', WebsiteSeeder::domain())->firstOrFail();
 
         $this->users = $this->seedUsers($website);
         $layouts = $this->seedLayouts($website);

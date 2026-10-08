@@ -42,6 +42,34 @@ it('scopes to a given domain', function () {
     expect($results->first()->domain)->toBe('match.test');
 });
 
+it('scopes to a website by its root domain when there is no subdomain', function () {
+    Website::factory()->create(['domain' => 'match.test', 'subdomain' => '']);
+    Website::factory()->create(['domain' => 'other.test', 'subdomain' => '']);
+
+    $results = Website::query()->forHost('match.test')->get();
+
+    expect($results)->toHaveCount(1);
+    expect($results->first()->domain)->toBe('match.test');
+});
+
+it('scopes to a website by subdomain + domain host', function () {
+    Website::factory()->create(['domain' => 'example.com', 'subdomain' => 'blog']);
+    Website::factory()->create(['domain' => 'example.com', 'subdomain' => '']);
+
+    $results = Website::query()->forHost('blog.example.com')->get();
+
+    expect($results)->toHaveCount(1);
+    expect($results->first()->subdomain)->toBe('blog');
+});
+
+it('does not match a root-domain website against an unrelated subdomain host', function () {
+    Website::factory()->create(['domain' => 'example.com', 'subdomain' => '']);
+
+    $results = Website::query()->forHost('blog.example.com')->get();
+
+    expect($results)->toHaveCount(0);
+});
+
 it('lists users through the website_users pivot with role/timestamps', function () {
     $website = Website::factory()->create();
     $user = User::factory()->create();

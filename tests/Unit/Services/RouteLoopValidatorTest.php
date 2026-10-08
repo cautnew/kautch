@@ -99,6 +99,28 @@ it('resolves a chain exactly at the maximum length', function () {
     expect($result->route->is($destination))->toBeTrue();
 });
 
+it('terminates a walk at a redirect pointing to an external URL', function () {
+    $website = Website::factory()->create();
+    $external = Route::factory()->externalRedirect('https://www.exemplo.com.br/site')->create(['website_id' => $website->id]);
+
+    $result = app(RouteLoopValidator::class)->walk($external->id);
+
+    expect($result->outcome)->toBe(RouteChainOutcome::ExternalRedirect);
+    expect($result->route->is($external))->toBeTrue();
+});
+
+it('follows an internal chain that terminates at an external URL', function () {
+    $website = Website::factory()->create();
+    $external = Route::factory()->externalRedirect('https://www.exemplo.com.br/site')->create(['website_id' => $website->id]);
+    $entry = Route::factory()->redirectingTo($external)->create(['website_id' => $website->id]);
+
+    $result = app(RouteLoopValidator::class)->walk($entry->id);
+
+    expect($result->outcome)->toBe(RouteChainOutcome::ExternalRedirect);
+    expect($result->route->is($external))->toBeTrue();
+    expect($result->hops)->toBe(1);
+});
+
 it('reports a broken chain when the redirect target has been soft-deleted', function () {
     $website = Website::factory()->create();
     $page = Page::factory()->create(['website_id' => $website->id]);

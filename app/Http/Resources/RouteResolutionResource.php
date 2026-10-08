@@ -29,9 +29,11 @@ class RouteResolutionResource extends JsonResource
             'asset' => $this->outcome === RouteResolutionOutcome::Asset
                 ? new AssetResource($this->finalRoute->asset)
                 : null,
-            'redirect_to' => $this->outcome === RouteResolutionOutcome::Redirect
-                ? $this->finalRoute->path
-                : null,
+            'redirect_to' => match ($this->outcome) {
+                RouteResolutionOutcome::Redirect => $this->finalRoute->path,
+                RouteResolutionOutcome::ExternalRedirect => $this->finalRoute->redirect_url,
+                default => null,
+            },
         ], fn (mixed $value): bool => $value !== null);
     }
 }

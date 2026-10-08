@@ -94,6 +94,67 @@ it('creates a redirect route defaulting to a 301 status', function () {
         ->assertJsonPath('data.http_status', 301);
 });
 
+it('creates a redirect route targeting an external URL', function () {
+    $website = Website::factory()->create();
+    $owner = User::factory()->create();
+    createWebsiteMembership($website, $owner, WebsiteRole::Owner);
+
+    $response = $this->actingAs($owner)->postJson(route('api.v1.websites.routes.store', $website), [
+        'path' => '/vai-embora',
+        'destination_type' => 'redirect',
+        'redirect_url' => 'https://www.exemplo.com.br/site',
+    ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('data.destination_type', 'redirect')
+        ->assertJsonPath('data.redirect_url', 'https://www.exemplo.com.br/site')
+        ->assertJsonPath('data.redirect_to_route_id', null)
+        ->assertJsonPath('data.http_status', 301);
+});
+
+it('rejects a redirect with neither an internal nor an external target', function () {
+    $website = Website::factory()->create();
+    $owner = User::factory()->create();
+    createWebsiteMembership($website, $owner, WebsiteRole::Owner);
+
+    $this->actingAs($owner)
+        ->postJson(route('api.v1.websites.routes.store', $website), ['path' => '/x', 'destination_type' => 'redirect'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['redirect_to_route_id']);
+});
+
+it('rejects a redirect with both an internal and an external target', function () {
+    $website = Website::factory()->create();
+    $owner = User::factory()->create();
+    createWebsiteMembership($website, $owner, WebsiteRole::Owner);
+    $target = Route::factory()->create(['website_id' => $website->id]);
+
+    $this->actingAs($owner)
+        ->postJson(route('api.v1.websites.routes.store', $website), [
+            'path' => '/x',
+            'destination_type' => 'redirect',
+            'redirect_to_route_id' => $target->id,
+            'redirect_url' => 'https://www.exemplo.com.br/site',
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['redirect_to_route_id']);
+});
+
+it('rejects a malformed redirect_url', function () {
+    $website = Website::factory()->create();
+    $owner = User::factory()->create();
+    createWebsiteMembership($website, $owner, WebsiteRole::Owner);
+
+    $this->actingAs($owner)
+        ->postJson(route('api.v1.websites.routes.store', $website), [
+            'path' => '/x',
+            'destination_type' => 'redirect',
+            'redirect_url' => 'not-a-url',
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['redirect_url']);
+});
+
 it('validates required fields on create', function () {
     $website = Website::factory()->create();
     $owner = User::factory()->create();
@@ -372,6 +433,69 @@ it('updates a redirect route\'s target', function () {
         ])
         ->assertSuccessful()
         ->assertJsonPath('data.redirect_to_route_id', $targetB->id);
+});
+
+it('retargets a redirect from an internal route to an external URL', function () {
+    $website = Website::factory()->create();
+    $owner = User::factory()->create();
+    createWebsiteMembership($website, $owner, WebsiteRole::Owner);
+    $target = Route::factory()->create(['website_id' => $website->id]);
+    $redirect = Route::factory()->redirectingTo($target)->create(['website_id' => $website->id]);
+
+    $this->actingAs($owner)
+        ->putJson(route('api.v1.websites.routes.update', [$website, $redirect]), [
+            'redirect_url' => 'https://www.exemplo.com.br/site',
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('data.redirect_url', 'https://www.exemplo.com.br/site')
+        ->assertJsonPath('data.redirect_to_route_id', null);
+});
+
+it('retargets a redirect from an external URL to an internal route', function () {
+    $website = Website::factory()->create();
+    $owner = User::factory()->create();
+    createWebsiteMembership($website, $owner, WebsiteRole::Owner);
+    $target = Route::factory()->create(['website_id' => $website->id]);
+    $redirect = Route::factory()->externalRedirect('https://www.exemplo.com.br/site')->create(['website_id' => $website->id]);
+
+    $this->actingAs($owner)
+        ->putJson(route('api.v1.websites.routes.update', [$website, $redirect]), [
+            'redirect_to_route_id' => $target->id,
+        ])
+        ->assertSuccessful()
+        ->assertJsonPath('data.redirect_to_route_id', $target->id)
+        ->assertJsonPath('data.redirect_url', null);
+});
+
+it('rejects updating a redirect with both an internal and an external target', function () {
+    $website = Website::factory()->create();
+    $owner = User::factory()->create();
+    createWebsiteMembership($website, $owner, WebsiteRole::Owner);
+    $target = Route::factory()->create(['website_id' => $website->id]);
+    $redirect = Route::factory()->redirectingTo($target)->create(['website_id' => $website->id]);
+
+    $this->actingAs($owner)
+        ->putJson(route('api.v1.websites.routes.update', [$website, $redirect]), [
+            'redirect_to_route_id' => $target->id,
+            'redirect_url' => 'https://www.exemplo.com.br/site',
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['redirect_to_route_id']);
+});
+
+it('rejects setting redirect_url on a non-redirect route', function () {
+    $website = Website::factory()->create();
+    $owner = User::factory()->create();
+    createWebsiteMembership($website, $owner, WebsiteRole::Owner);
+    $page = Page::factory()->create(['website_id' => $website->id]);
+    $routeModel = Route::factory()->forPage($page)->create(['website_id' => $website->id]);
+
+    $this->actingAs($owner)
+        ->putJson(route('api.v1.websites.routes.update', [$website, $routeModel]), [
+            'redirect_url' => 'https://www.exemplo.com.br/site',
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['redirect_url']);
 });
 
 it('rejects setting redirect_to_route_id on a non-redirect route', function () {

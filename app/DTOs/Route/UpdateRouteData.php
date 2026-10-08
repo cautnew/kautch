@@ -13,6 +13,7 @@ final readonly class UpdateRouteData
         public ?HttpMethod $httpMethod = null,
         public ?int $httpStatus = null,
         public ?string $redirectToRouteId = null,
+        public ?string $redirectUrl = null,
     ) {}
 
     public static function fromRequest(UpdateRouteRequest $request): self
@@ -22,6 +23,7 @@ final readonly class UpdateRouteData
             httpMethod: $request->filled('http_method') ? HttpMethod::from($request->string('http_method')->toString()) : null,
             httpStatus: $request->filled('http_status') ? (int) $request->input('http_status') : null,
             redirectToRouteId: $request->filled('redirect_to_route_id') ? $request->string('redirect_to_route_id')->toString() : null,
+            redirectUrl: $request->filled('redirect_url') ? $request->string('redirect_url')->toString() : null,
         );
     }
 
@@ -39,6 +41,7 @@ final readonly class UpdateRouteData
             'http_method' => $this->httpMethod,
             'http_status' => $this->httpStatus,
             'redirect_to_route_id' => $this->redirectToRouteId,
+            'redirect_url' => $this->redirectUrl,
         ], fn (mixed $value): bool => $value !== null);
     }
 }

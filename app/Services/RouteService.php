@@ -49,8 +49,15 @@ final class RouteService
 
         $attributes = $data->toArray();
 
-        if ($route->destination_type === RouteDestinationType::Redirect && array_key_exists('redirect_to_route_id', $attributes)) {
-            $this->loopValidator->assertNoLoop($route->id, $attributes['redirect_to_route_id']);
+        if ($route->destination_type === RouteDestinationType::Redirect) {
+            if (array_key_exists('redirect_to_route_id', $attributes)) {
+                $this->loopValidator->assertNoLoop($route->id, $attributes['redirect_to_route_id']);
+                // A redirect targets exactly one of the two columns — retargeting
+                // internally clears whichever external URL it previously had.
+                $attributes['redirect_url'] = null;
+            } elseif (array_key_exists('redirect_url', $attributes)) {
+                $attributes['redirect_to_route_id'] = null;
+            }
         }
 
         return $this->routes->update($route, $attributes);

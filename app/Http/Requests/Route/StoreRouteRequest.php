@@ -52,12 +52,12 @@ class StoreRouteRequest extends FormRequest
                 Rule::exists('assets', 'id')->where('website_id', $website->id),
             ],
             'redirect_to_route_id' => [
-                'required_if:destination_type,'.RouteDestinationType::Redirect->value,
                 'nullable',
                 'string',
                 'uuid',
                 Rule::exists('routes', 'id')->where('website_id', $website->id),
             ],
+            'redirect_url' => ['nullable', 'string', 'url', 'max:2048'],
         ];
     }
 
@@ -67,8 +67,31 @@ class StoreRouteRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function (Validator $validator): void {
+            $this->validateRedirectTarget($validator);
             $this->validatePathUnique($validator);
         });
+    }
+
+    /**
+     * A redirect route must target exactly one of an internal route or an
+     * external URL — neither both nor neither.
+     */
+    private function validateRedirectTarget(Validator $validator): void
+    {
+        if ($this->input('destination_type') !== RouteDestinationType::Redirect->value) {
+            return;
+        }
+
+        $hasRouteTarget = $this->filled('redirect_to_route_id');
+        $hasUrlTarget = $this->filled('redirect_url');
+
+        if ($hasRouteTarget === $hasUrlTarget) {
+            $message = $hasRouteTarget
+                ? 'A redirect route must target only one of redirect_to_route_id or redirect_url, not both.'
+                : 'A redirect route requires either redirect_to_route_id or redirect_url.';
+
+            $validator->errors()->add('redirect_to_route_id', $message);
+        }
     }
 
     /**

@@ -44,6 +44,7 @@ class UpdateRouteRequest extends FormRequest
                 'uuid',
                 Rule::exists('routes', 'id')->where('website_id', $website->id),
             ],
+            'redirect_url' => ['sometimes', 'string', 'url', 'max:2048'],
         ];
     }
 
@@ -59,12 +60,18 @@ class UpdateRouteRequest extends FormRequest
     }
 
     /**
-     * redirect_to_route_id only makes sense on a route whose destination_type
-     * is already "redirect" — it's not something you can bolt onto a page/asset route.
+     * redirect_to_route_id/redirect_url only make sense on a route whose
+     * destination_type is already "redirect" — not something you can bolt
+     * onto a page/asset route — and a single update can only retarget one
+     * of the two (whichever isn't given keeps its previous value, cleared
+     * by RouteService if the other one changes).
      */
     private function validateRedirectTargetOnlyForRedirects(Validator $validator): void
     {
-        if (! $this->filled('redirect_to_route_id')) {
+        $hasRouteTarget = $this->filled('redirect_to_route_id');
+        $hasUrlTarget = $this->filled('redirect_url');
+
+        if (! $hasRouteTarget && ! $hasUrlTarget) {
             return;
         }
 
@@ -72,7 +79,14 @@ class UpdateRouteRequest extends FormRequest
         $route = $this->route('route');
 
         if ($route->destination_type !== RouteDestinationType::Redirect) {
-            $validator->errors()->add('redirect_to_route_id', 'Only a redirect route has a target to update.');
+            $field = $hasRouteTarget ? 'redirect_to_route_id' : 'redirect_url';
+            $validator->errors()->add($field, 'Only a redirect route has a target to update.');
+
+            return;
+        }
+
+        if ($hasRouteTarget && $hasUrlTarget) {
+            $validator->errors()->add('redirect_to_route_id', 'A redirect route can target only one of redirect_to_route_id or redirect_url, not both.');
         }
     }
 

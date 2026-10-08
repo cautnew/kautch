@@ -161,6 +161,32 @@ class Website extends Model
     }
 
     /**
+     * Scope a query to the website whose host (subdomain + domain, per the
+     * host accessor above) matches the given request host exactly. Splits
+     * on the *first* dot only, so a domain that itself contains dots (e.g.
+     * "example.co.uk") is still recovered correctly from "blog.example.co.uk".
+     *
+     * @param  Builder<Website>  $query
+     * @return Builder<Website>
+     */
+    public function scopeForHost(Builder $query, string $host): Builder
+    {
+        return $query->where(function (Builder $query) use ($host): void {
+            $query->where('domain', $host)->where(function (Builder $query): void {
+                $query->whereNull('subdomain')->orWhere('subdomain', '');
+            });
+
+            if (str_contains($host, '.')) {
+                [$subdomain, $domain] = explode('.', $host, 2);
+
+                $query->orWhere(function (Builder $query) use ($subdomain, $domain): void {
+                    $query->where('subdomain', $subdomain)->where('domain', $domain);
+                });
+            }
+        });
+    }
+
+    /**
      * A website is its own audit scope (it has no website_id column of its own).
      */
     public function auditWebsiteId(): ?string

@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'website_id', 'path', 'http_method', 'destination_type',
-    'page_id', 'asset_id', 'redirect_to_route_id', 'http_status',
+    'page_id', 'asset_id', 'redirect_to_route_id', 'redirect_url', 'http_status',
     'created_by', 'deleted_by',
 ])]
 class Route extends Model

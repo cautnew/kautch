@@ -92,6 +92,10 @@ final class RouteLoopValidator
                 return RouteChainResult::resolved($route, $hops);
             }
 
+            if ($route->redirect_url !== null) {
+                return RouteChainResult::externalRedirect($route, $hops);
+            }
+
             if ($route->redirect_to_route_id === null) {
                 return RouteChainResult::broken($hops);
             }

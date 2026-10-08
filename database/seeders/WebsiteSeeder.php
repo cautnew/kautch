@@ -17,7 +17,17 @@ use Illuminate\Database\Seeder;
  */
 class WebsiteSeeder extends Seeder
 {
-    public const DOMAIN = 'kautch-demo.test';
+    /**
+     * The demo website's domain is the app's own reachable host (APP_URL),
+     * not an arbitrary fake one — that's what actually lets the seeded
+     * routes/pages be visited in a browser without any extra DNS/hosts-file
+     * setup (a domain like "kautch-demo.test" would need to be registered
+     * with the local dev environment's router before it resolves at all).
+     */
+    public static function domain(): string
+    {
+        return parse_url((string) config('app.url'), PHP_URL_HOST) ?? 'localhost';
+    }
 
     public function run(): void
     {
@@ -26,7 +36,7 @@ class WebsiteSeeder extends Seeder
         $owner = User::query()->where('email', AdminSeeder::EMAIL)->firstOrFail();
 
         $website = Website::query()->firstOrCreate(
-            ['domain' => self::DOMAIN],
+            ['domain' => self::domain()],
             [
                 'name' => 'Kautch Demo',
                 'subdomain' => '',

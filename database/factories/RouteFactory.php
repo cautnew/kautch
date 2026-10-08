@@ -31,6 +31,7 @@ class RouteFactory extends Factory
             'page_id' => fn (array $attributes) => Page::factory()->create(['website_id' => $attributes['website_id']])->id,
             'asset_id' => null,
             'redirect_to_route_id' => null,
+            'redirect_url' => null,
             'http_status' => 200,
             'created_by' => User::factory(),
         ];
@@ -47,6 +48,7 @@ class RouteFactory extends Factory
             'page_id' => $page->id,
             'asset_id' => null,
             'redirect_to_route_id' => null,
+            'redirect_url' => null,
         ]);
     }
 
@@ -61,6 +63,7 @@ class RouteFactory extends Factory
             'page_id' => null,
             'asset_id' => $asset->id,
             'redirect_to_route_id' => null,
+            'redirect_url' => null,
             'http_status' => 200,
         ]);
     }
@@ -76,6 +79,22 @@ class RouteFactory extends Factory
             'page_id' => null,
             'asset_id' => null,
             'redirect_to_route_id' => $target->id,
+            'redirect_url' => null,
+            'http_status' => $status,
+        ]);
+    }
+
+    /**
+     * Indicate that this route redirects to an external URL.
+     */
+    public function externalRedirect(?string $url = null, int $status = 301): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'destination_type' => RouteDestinationType::Redirect,
+            'page_id' => null,
+            'asset_id' => null,
+            'redirect_to_route_id' => null,
+            'redirect_url' => $url ?? fake()->url(),
             'http_status' => $status,
         ]);
     }
