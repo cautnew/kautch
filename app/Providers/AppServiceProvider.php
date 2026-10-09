@@ -25,8 +25,11 @@ use App\Repositories\Eloquent\WebsiteRepository;
 use App\Repositories\Eloquent\WebsiteUserRepository;
 use App\Support\RequestAuditContext;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Inertia\Inertia;
+use Laravel\Fortify\Fortify;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -55,6 +58,17 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->registerGates();
         $this->registerPasswordResetUrl();
+        $this->registerAuthenticationViews();
+    }
+
+    protected function registerAuthenticationViews(): void
+    {
+        Fortify::loginView(fn () => Inertia::render('login'));
+        Fortify::requestPasswordResetLinkView(fn () => Inertia::render('forgot-password'));
+        Fortify::resetPasswordView(fn (Request $request) => Inertia::render('reset-password', [
+            'token' => $request->route('token'),
+            'email' => $request->input('email'),
+        ]));
     }
 
     /**

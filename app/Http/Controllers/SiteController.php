@@ -36,8 +36,9 @@ use Illuminate\Http\Response;
  * A host that doesn't belong to any managed website falls back to this
  * platform's own placeholder page.
  *
- * Registered as a single catch-all in routes/web.php via a controller
- * reference (not a closure), so route:cache keeps working in production.
+ * Registered as the web fallback route via a controller reference (not a
+ * closure), so application and API routes take precedence and route:cache
+ * keeps working in production.
  */
 class SiteController extends Controller
 {
@@ -46,6 +47,13 @@ class SiteController extends Controller
         private readonly ContentService $content,
         private readonly AssetService $assets,
     ) {}
+
+    public function fallback(Request $request): Response|RedirectResponse|JsonResponse
+    {
+        $path = $request->path();
+
+        return $this->show($request, $path === '/' ? null : $path);
+    }
 
     public function show(Request $request, ?string $path = null): Response|RedirectResponse|JsonResponse
     {
