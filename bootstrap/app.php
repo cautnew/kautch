@@ -4,6 +4,7 @@ use App\Exceptions\RouteLoopException;
 use App\Exceptions\TooManyRedirectsException;
 use App\Http\Middleware\CaptureAuditContext;
 use App\Http\Middleware\EnsureWebsiteRole;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -25,6 +26,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            HandleInertiaRequests::class,
+        ]);
+        $middleware->statefulApi();
+
         $middleware->alias([
             'website.role' => EnsureWebsiteRole::class,
         ]);

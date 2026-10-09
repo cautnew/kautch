@@ -14,6 +14,8 @@
         "cautnew/phtml": "^1.0",
         "cautnew/typedarr": "^1.0",
         "dedoc/scramble": "^0.13.38",
+        "inertiajs/inertia-laravel": "^3.0",
+        "laravel/fortify": "^1.37",
         "laravel/framework": "^13.8",
         "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.0",

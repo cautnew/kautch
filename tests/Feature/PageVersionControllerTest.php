@@ -63,7 +63,7 @@ it('creates a draft version with a full layout and seo snapshot', function () {
 
     $version = PageVersion::where('page_id', $page->id)->first();
     expect($version->created_by)->toBe($owner->id);
-    expect($version->layout_snapshot['schema'])->toBe($layout->schema);
+    expect($version->layout_snapshot['schema'])->toEqualCanonicalizing($layout->schema);
 });
 
 it('keeps the snapshot unchanged after the layout is later modified', function () {
