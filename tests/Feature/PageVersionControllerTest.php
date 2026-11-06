@@ -8,6 +8,7 @@ use App\Models\PageVersionReview;
 use App\Models\User;
 use App\Models\Website;
 use App\Services\PageVersionService;
+use Illuminate\Support\Str;
 
 it('rejects unauthenticated access to every endpoint', function () {
     $website = Website::factory()->create();
@@ -35,6 +36,40 @@ it('lets any member view versions but denies outsiders', function () {
 
     $this->actingAs($outsider)->getJson(route('api.v1.pages.versions.index', $page))->assertForbidden();
     $this->actingAs($outsider)->getJson(route('api.v1.versions.show', ['page' => $version->page_id, 'version' => $version]))->assertForbidden();
+});
+
+it('shows a version through the direct route without the page in the URL', function () {
+    $website = Website::factory()->create();
+    $viewer = User::factory()->create();
+    createWebsiteMembership($website, $viewer, WebsiteRole::Viewer);
+    $outsider = User::factory()->create();
+    $page = Page::factory()->create(['website_id' => $website->id]);
+    $version = PageVersion::factory()->published()->create(['page_id' => $page->id]);
+
+    $this->getJson(route('api.v1.versions.direct.show', $version))->assertUnauthorized();
+
+    $this->actingAs($viewer)
+        ->getJson(route('api.v1.versions.direct.show', $version))
+        ->assertSuccessful()
+        ->assertJsonPath('data.id', $version->id)
+        ->assertJsonPath('data.page_id', $page->id)
+        ->assertJsonPath('data.is_published', true);
+
+    $this->actingAs($viewer)
+        ->getJson(route('api.v1.versions.direct.pieces.index', $version))
+        ->assertSuccessful();
+
+    $this->actingAs($outsider)
+        ->getJson(route('api.v1.versions.direct.show', $version))
+        ->assertForbidden();
+});
+
+it('returns not found for an unknown version on the direct route', function () {
+    $viewer = User::factory()->create();
+
+    $this->actingAs($viewer)
+        ->getJson(route('api.v1.versions.direct.show', (string) Str::uuid()))
+        ->assertNotFound();
 });
 
 it('lists only version metadata with the last updater and latest approver', function () {

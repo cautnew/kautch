@@ -3520,7 +3520,7 @@
         },
         "/v1/versions/{version}": {
             "get": {
-                "operationId": "v1.show",
+                "operationId": "v1.versions.direct.show",
                 "summary": "Show a single page version",
                 "tags": [
                     "PageVersion"
@@ -3597,22 +3597,12 @@
                 }
             },
             "put": {
-                "operationId": "v1.update",
+                "operationId": "v1.versions.direct.update",
                 "summary": "Update a version's seo snapshot and/or layout. If the version is\npublished, the change transparently lands on an auto-cloned draft\ninstead of the published version itself",
                 "tags": [
                     "PageVersion"
                 ],
                 "parameters": [
-                    {
-                        "name": "page",
-                        "in": "path",
-                        "required": true,
-                        "description": "The page ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
                     {
                         "name": "version",
                         "in": "path",
@@ -3696,17 +3686,17 @@
                 }
             },
             "delete": {
-                "operationId": "v1.destroy",
+                "operationId": "v1.versions.direct.destroy",
                 "summary": "Delete (soft-delete) a page version. Published versions can never be deleted",
                 "tags": [
                     "PageVersion"
                 ],
                 "parameters": [
                     {
-                        "name": "page",
+                        "name": "version",
                         "in": "path",
                         "required": true,
-                        "description": "The page ID",
+                        "description": "The version ID",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
@@ -3775,7 +3765,7 @@
         },
         "/v1/versions/{version}/submit-review": {
             "post": {
-                "operationId": "v1.submit-review",
+                "operationId": "v1.versions.direct.submit-review",
                 "summary": "Submit a draft (or a previously rejected version) for QA review",
                 "tags": [
                     "PageVersion"
@@ -3852,77 +3842,14 @@
                 }
             }
         },
-        "/v1/pages/{page}/{version}/submit-review": {
+        "/v1/versions/{version}/approve": {
             "post": {
-                "operationId": "v1.versions.submit-review",
-                "summary": "Submit a draft (or a previously rejected version) for QA review",
-                "tags": [
-                    "PageVersion"
-                ],
-                "parameters": [
-                    {
-                        "name": "page",
-                        "in": "path",
-                        "required": true,
-                        "description": "The page ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
-                    {
-                        "name": "version",
-                        "in": "path",
-                        "required": true,
-                        "description": "The version ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {}
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/v1/pages/{page}/{version}/approve": {
-            "post": {
-                "operationId": "v1.approve",
+                "operationId": "v1.versions.direct.approve",
                 "summary": "QA approves a version under review, clearing it for publication",
                 "tags": [
                     "PageVersion"
                 ],
                 "parameters": [
-                    {
-                        "name": "page",
-                        "in": "path",
-                        "required": true,
-                        "description": "The page ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
                     {
                         "name": "version",
                         "in": "path",
@@ -4006,24 +3933,14 @@
                 }
             }
         },
-        "/v1/pages/{page}/{version}/reject": {
+        "/v1/versions/{version}/reject": {
             "post": {
-                "operationId": "v1.reject",
+                "operationId": "v1.versions.direct.reject",
                 "summary": "QA rejects a version under review, sending it back for edits",
                 "tags": [
                     "PageVersion"
                 ],
                 "parameters": [
-                    {
-                        "name": "page",
-                        "in": "path",
-                        "required": true,
-                        "description": "The page ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
                     {
                         "name": "version",
                         "in": "path",
@@ -4108,24 +4025,14 @@
                 }
             }
         },
-        "/v1/pages/{page}/{version}/publish": {
+        "/v1/versions/{version}/publish": {
             "post": {
-                "operationId": "v1.publish",
+                "operationId": "v1.versions.direct.publish",
                 "summary": "Publish an approved version. Editors can never publish, only admin/owner",
                 "tags": [
                     "PageVersion"
                 ],
                 "parameters": [
-                    {
-                        "name": "page",
-                        "in": "path",
-                        "required": true,
-                        "description": "The page ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
                     {
                         "name": "version",
                         "in": "path",
@@ -4712,123 +4619,15 @@
                 }
             }
         },
-        "/v1/pages/{page}/pieces": {
+        "/v1/versions/{version}/pieces": {
             "get": {
-                "operationId": "v1.pages.current-version.pieces.index",
+                "operationId": "v1.versions.direct.pieces.index",
                 "description": "Piece::class must be given explicitly: passing only the 'version' route\nparam would let Laravel infer the policy from PageVersion's class\n(PageVersionPolicy) instead of the PiecePolicy::viewAny() we want here.",
                 "summary": "The full piece tree for the version (root pieces, with every descendant\nrecursively eager-loaded)",
                 "tags": [
                     "Piece"
                 ],
                 "parameters": [
-                    {
-                        "name": "page",
-                        "in": "path",
-                        "required": true,
-                        "description": "The page ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {}
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "post": {
-                "operationId": "v1.pages.current-version.pieces.store",
-                "summary": "Add a new piece to the version's tree (at the root, or nested under a\nparent via parent_piece_id \u2014 only while the version is still editable)",
-                "tags": [
-                    "Piece"
-                ],
-                "parameters": [
-                    {
-                        "name": "page",
-                        "in": "path",
-                        "required": true,
-                        "description": "The page ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/StorePieceRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {}
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    }
-                }
-            }
-        },
-        "/v1/pages/{page}/{version}/pieces": {
-            "get": {
-                "operationId": "v1.pieces.index",
-                "description": "Piece::class must be given explicitly: passing only the 'version' route\nparam would let Laravel infer the policy from PageVersion's class\n(PageVersionPolicy) instead of the PiecePolicy::viewAny() we want here.",
-                "summary": "The full piece tree for the version (root pieces, with every descendant\nrecursively eager-loaded)",
-                "tags": [
-                    "Piece"
-                ],
-                "parameters": [
-                    {
-                        "name": "page",
-                        "in": "path",
-                        "required": true,
-                        "description": "The page ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
                     {
                         "name": "version",
                         "in": "path",
@@ -4903,22 +4702,12 @@
                 }
             },
             "post": {
-                "operationId": "v1.pieces.store",
+                "operationId": "v1.versions.direct.pieces.store",
                 "summary": "Add a new piece to the version's tree (at the root, or nested under a\nparent via parent_piece_id \u2014 only while the version is still editable)",
                 "tags": [
                     "Piece"
                 ],
                 "parameters": [
-                    {
-                        "name": "page",
-                        "in": "path",
-                        "required": true,
-                        "description": "The page ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    },
                     {
                         "name": "version",
                         "in": "path",

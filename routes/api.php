@@ -54,7 +54,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::prefix('pages/{page}')->scopeBindings()->middleware(ResolvePageVersion::class)->group(function () {
             foreach ([
                 '' => 'pages.current-version.',
-                '{version}' => 'versions.'
+                '{version}' => 'versions.',
             ] as $prefix => $name) {
                 Route::prefix($prefix)->name($name)->whereUuid('version')->group(function () {
                     Route::get('/', [PageVersionController::class, 'show'])->name('show');
@@ -72,7 +72,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             }
         });
 
-        Route::prefix('versions/{version}')->scopeBindings()->middleware(ResolvePageVersion::class)->group(function () {
+        Route::prefix('versions/{version}')->name('versions.direct.')->whereUuid('version')->middleware(ResolvePageVersion::class)->group(function () {
             Route::get('/', [PageVersionController::class, 'show'])->name('show');
             Route::put('/', [PageVersionController::class, 'update'])->name('update');
             Route::delete('/', [PageVersionController::class, 'destroy'])->name('destroy');

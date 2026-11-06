@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Page;
+use App\Models\PageVersion;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,15 +17,29 @@ class ResolvePageVersion
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $page = $request->route('page');
+        $route = $request->route();
+        $page = $route->parameter('page');
+        $version = $route->parameter('version');
+
+        if ($page === null && $version instanceof PageVersion) {
+            $page = $version->page;
+
+            if (! $page instanceof Page) {
+                abort(404);
+            }
+
+            $route->forgetParameter('version');
+            $route->setParameter('page', $page);
+            $route->setParameter('version', $version);
+        }
 
         if (! $page instanceof Page) {
             abort(404);
         }
 
-        if ($request->route('version') === null) {
+        if ($version === null) {
             $version = $page->publishedVersion ?? $page->latestVersion()->firstOrFail();
-            $request->route()->setParameter('version', $version);
+            $route->setParameter('version', $version);
         }
 
         return $next($request);

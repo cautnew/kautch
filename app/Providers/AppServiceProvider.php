@@ -28,6 +28,7 @@ use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\Tag;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -61,7 +62,18 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->registerGates();
         $this->registerPasswordResetUrl();
+        $this->registerAuthenticationViews();
         $this->configureApiDocumentation();
+    }
+
+    protected function registerAuthenticationViews(): void
+    {
+        Fortify::loginView(fn () => Inertia::render('login'));
+        Fortify::requestPasswordResetLinkView(fn () => Inertia::render('forgot-password'));
+        Fortify::resetPasswordView(fn (Request $request) => Inertia::render('reset-password', [
+            'token' => $request->route('token'),
+            'email' => $request->input('email'),
+        ]));
     }
 
     protected function configureApiDocumentation(): void
