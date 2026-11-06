@@ -4,7 +4,7 @@ use App\Exceptions\RouteLoopException;
 use App\Exceptions\TooManyRedirectsException;
 use App\Http\Middleware\CaptureAuditContext;
 use App\Http\Middleware\EnsureWebsiteRole;
-use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\ResolvePageVersion;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
