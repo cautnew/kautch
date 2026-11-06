@@ -1096,7 +1096,341 @@
                 }
             }
         },
-        "/v1/versions/{version}": {
+        "/v1/pages/{page}": {
+            "get": {
+                "operationId": "v1.pages.current-version.show",
+                "summary": "Show a single page version",
+                "tags": [
+                    "PageVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "v1.pages.current-version.update",
+                "summary": "Update a version's seo snapshot and/or layout. If the version is\npublished, the change transparently lands on an auto-cloned draft\ninstead of the published version itself",
+                "tags": [
+                    "PageVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePageVersionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "v1.pages.current-version.destroy",
+                "summary": "Delete (soft-delete) a page version. Published versions can never be deleted",
+                "tags": [
+                    "PageVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/pages/{page}/submit-review": {
+            "post": {
+                "operationId": "v1.pages.current-version.submit-review",
+                "summary": "Submit a draft (or a previously rejected version) for QA review",
+                "tags": [
+                    "PageVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/pages/{page}/approve": {
+            "post": {
+                "operationId": "v1.pages.current-version.approve",
+                "summary": "QA approves a version under review, clearing it for publication",
+                "tags": [
+                    "PageVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ApprovePageVersionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/pages/{page}/reject": {
+            "post": {
+                "operationId": "v1.pages.current-version.reject",
+                "summary": "QA rejects a version under review, sending it back for edits",
+                "tags": [
+                    "PageVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RejectPageVersionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/pages/{page}/publish": {
+            "post": {
+                "operationId": "v1.pages.current-version.publish",
+                "summary": "Publish an approved version. Editors can never publish, only admin/owner",
+                "tags": [
+                    "PageVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/pages/{page}/{version}": {
             "get": {
                 "operationId": "v1.versions.show",
                 "summary": "Show a single page version",
@@ -1104,6 +1438,16 @@
                     "PageVersion"
                 ],
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
                     {
                         "name": "version",
                         "in": "path",
@@ -1145,6 +1489,16 @@
                     "PageVersion"
                 ],
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
                     {
                         "name": "version",
                         "in": "path",
@@ -1199,48 +1553,15 @@
                 ],
                 "parameters": [
                     {
-                        "name": "version",
+                        "name": "page",
                         "in": "path",
                         "required": true,
-                        "description": "The version ID",
+                        "description": "The page ID",
                         "schema": {
                             "type": "string",
                             "format": "uuid"
                         }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {}
-                                }
-                            }
-                        }
                     },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/v1/versions/{version}/submit-review": {
-            "post": {
-                "operationId": "v1.versions.submit-review",
-                "summary": "Submit a draft (or a previously rejected version) for QA review",
-                "tags": [
-                    "PageVersion"
-                ],
-                "parameters": [
                     {
                         "name": "version",
                         "in": "path",
@@ -1276,7 +1597,60 @@
                 }
             }
         },
-        "/v1/versions/{version}/approve": {
+        "/v1/pages/{page}/{version}/submit-review": {
+            "post": {
+                "operationId": "v1.versions.submit-review",
+                "summary": "Submit a draft (or a previously rejected version) for QA review",
+                "tags": [
+                    "PageVersion"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "description": "The version ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/v1/pages/{page}/{version}/approve": {
             "post": {
                 "operationId": "v1.versions.approve",
                 "summary": "QA approves a version under review, clearing it for publication",
@@ -1284,6 +1658,16 @@
                     "PageVersion"
                 ],
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
                     {
                         "name": "version",
                         "in": "path",
@@ -1331,7 +1715,7 @@
                 }
             }
         },
-        "/v1/versions/{version}/reject": {
+        "/v1/pages/{page}/{version}/reject": {
             "post": {
                 "operationId": "v1.versions.reject",
                 "summary": "QA rejects a version under review, sending it back for edits",
@@ -1339,6 +1723,16 @@
                     "PageVersion"
                 ],
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
                     {
                         "name": "version",
                         "in": "path",
@@ -1387,7 +1781,7 @@
                 }
             }
         },
-        "/v1/versions/{version}/publish": {
+        "/v1/pages/{page}/{version}/publish": {
             "post": {
                 "operationId": "v1.versions.publish",
                 "summary": "Publish an approved version. Editors can never publish, only admin/owner",
@@ -1395,6 +1789,16 @@
                     "PageVersion"
                 ],
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
                     {
                         "name": "version",
                         "in": "path",
@@ -1506,7 +1910,105 @@
                 }
             }
         },
-        "/v1/versions/{version}/pieces": {
+        "/v1/pages/{page}/pieces": {
+            "get": {
+                "operationId": "v1.pages.current-version.pieces.index",
+                "description": "Piece::class must be given explicitly: passing only the 'version' route\nparam would let Laravel infer the policy from PageVersion's class\n(PageVersionPolicy) instead of the PiecePolicy::viewAny() we want here.",
+                "summary": "The full piece tree for the version (root pieces, with every descendant\nrecursively eager-loaded)",
+                "tags": [
+                    "Piece"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "v1.pages.current-version.pieces.store",
+                "summary": "Add a new piece to the version's tree (at the root, or nested under a\nparent via parent_piece_id \u2014 only while the version is still editable)",
+                "tags": [
+                    "Piece"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StorePieceRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {}
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/v1/pages/{page}/{version}/pieces": {
             "get": {
                 "operationId": "v1.versions.pieces.index",
                 "description": "Piece::class must be given explicitly: passing only the 'version' route\nparam would let Laravel infer the policy from PageVersion's class\n(PageVersionPolicy) instead of the PiecePolicy::viewAny() we want here.",
@@ -1515,6 +2017,16 @@
                     "Piece"
                 ],
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
                     {
                         "name": "version",
                         "in": "path",
@@ -1556,6 +2068,16 @@
                     "Piece"
                 ],
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "path",
+                        "required": true,
+                        "description": "The page ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
                     {
                         "name": "version",
                         "in": "path",
@@ -3019,6 +3541,14 @@
                             "null"
                         ],
                         "format": "uuid"
+                    },
+                    "redirect_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uri",
+                        "maxLength": 2048
                     }
                 },
                 "required": [
@@ -3318,6 +3848,11 @@
                     "redirect_to_route_id": {
                         "type": "string",
                         "format": "uuid"
+                    },
+                    "redirect_url": {
+                        "type": "string",
+                        "format": "uri",
+                        "maxLength": 2048
                     }
                 },
                 "title": "UpdateRouteRequest"

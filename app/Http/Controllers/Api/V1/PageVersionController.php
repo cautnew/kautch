@@ -11,6 +11,7 @@ use App\Http\Requests\PageVersion\ApprovePageVersionRequest;
 use App\Http\Requests\PageVersion\RejectPageVersionRequest;
 use App\Http\Requests\PageVersion\StorePageVersionRequest;
 use App\Http\Requests\PageVersion\UpdatePageVersionRequest;
+use App\Http\Resources\PageVersionListResource;
 use App\Http\Resources\PageVersionResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Page;
@@ -36,7 +37,7 @@ class PageVersionController extends Controller
     #[Authorize('viewAny', [PageVersion::class, 'page'])]
     public function index(Page $page): JsonResponse
     {
-        return ApiResponse::success(PageVersionResource::collection($this->versions->listForPage($page)));
+        return ApiResponse::success(PageVersionListResource::collection($this->versions->listForPage($page)));
     }
 
     /**
@@ -54,7 +55,7 @@ class PageVersionController extends Controller
      * Show a single page version.
      */
     #[Authorize('view', 'version')]
-    public function show(PageVersion $version): JsonResponse
+    public function show(Page $page, PageVersion $version): JsonResponse
     {
         return ApiResponse::success(new PageVersionResource($version));
     }
@@ -65,7 +66,7 @@ class PageVersionController extends Controller
      * instead of the published version itself.
      */
     #[Authorize('update', 'version')]
-    public function update(UpdatePageVersionRequest $request, PageVersion $version): JsonResponse
+    public function update(UpdatePageVersionRequest $request, Page $page, PageVersion $version): JsonResponse
     {
         $version = $this->versions->update($version, $request->user(), UpdatePageVersionData::fromRequest($request));
 
@@ -76,7 +77,7 @@ class PageVersionController extends Controller
      * Delete (soft-delete) a page version. Published versions can never be deleted.
      */
     #[Authorize('delete', 'version')]
-    public function destroy(PageVersion $version): JsonResponse
+    public function destroy(Page $page, PageVersion $version): JsonResponse
     {
         $this->versions->delete($version);
 
@@ -87,7 +88,7 @@ class PageVersionController extends Controller
      * Submit a draft (or a previously rejected version) for QA review.
      */
     #[Authorize('submitForReview', 'version')]
-    public function submitReview(Request $request, PageVersion $version): JsonResponse
+    public function submitReview(Request $request, Page $page, PageVersion $version): JsonResponse
     {
         $version = $this->versions->submitForReview($version);
 
@@ -98,7 +99,7 @@ class PageVersionController extends Controller
      * QA approves a version under review, clearing it for publication.
      */
     #[Authorize('approve', 'version')]
-    public function approve(ApprovePageVersionRequest $request, PageVersion $version): JsonResponse
+    public function approve(ApprovePageVersionRequest $request, Page $page, PageVersion $version): JsonResponse
     {
         $data = ApprovePageVersionData::fromRequest($request);
         $version = $this->versions->approve($version, $request->user(), $data->notes);
@@ -110,7 +111,7 @@ class PageVersionController extends Controller
      * QA rejects a version under review, sending it back for edits.
      */
     #[Authorize('reject', 'version')]
-    public function reject(RejectPageVersionRequest $request, PageVersion $version): JsonResponse
+    public function reject(RejectPageVersionRequest $request, Page $page, PageVersion $version): JsonResponse
     {
         $data = RejectPageVersionData::fromRequest($request);
         $version = $this->versions->reject($version, $request->user(), $data->notes);
@@ -122,7 +123,7 @@ class PageVersionController extends Controller
      * Publish an approved version. Editors can never publish, only admin/owner.
      */
     #[Authorize('publish', 'version')]
-    public function publish(Request $request, PageVersion $version): JsonResponse
+    public function publish(Request $request, Page $page, PageVersion $version): JsonResponse
     {
         $version = $this->versions->publish($version, $request->user());
 

@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\PieceController;
 use App\Http\Controllers\Api\V1\RouteController;
 use App\Http\Controllers\Api\V1\WebsiteController;
 use App\Http\Controllers\Api\V1\WebsiteUserController;
+use App\Http\Middleware\ResolvePageVersion;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->name('api.v1.')->group(function () {
@@ -49,26 +50,42 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             ->name('pages.versions.index');
         Route::post('pages/{page}/versions', [PageVersionController::class, 'store'])
             ->name('pages.versions.store');
-        Route::get('versions/{version}', [PageVersionController::class, 'show'])
-            ->name('versions.show');
-        Route::put('versions/{version}', [PageVersionController::class, 'update'])
-            ->name('versions.update');
-        Route::delete('versions/{version}', [PageVersionController::class, 'destroy'])
-            ->name('versions.destroy');
 
-        Route::post('versions/{version}/submit-review', [PageVersionController::class, 'submitReview'])
-            ->name('versions.submit-review');
-        Route::post('versions/{version}/approve', [PageVersionController::class, 'approve'])
-            ->name('versions.approve');
-        Route::post('versions/{version}/reject', [PageVersionController::class, 'reject'])
-            ->name('versions.reject');
-        Route::post('versions/{version}/publish', [PageVersionController::class, 'publish'])
-            ->name('versions.publish');
+        Route::prefix('pages/{page}')->scopeBindings()->middleware(ResolvePageVersion::class)->group(function () {
+            foreach ([
+                '' => 'pages.current-version.',
+                '{version}' => 'versions.'
+            ] as $prefix => $name) {
+                Route::prefix($prefix)->name($name)->whereUuid('version')->group(function () {
+                    Route::get('/', [PageVersionController::class, 'show'])->name('show');
+                    Route::put('/', [PageVersionController::class, 'update'])->name('update');
+                    Route::delete('/', [PageVersionController::class, 'destroy'])->name('destroy');
 
-        Route::get('versions/{version}/pieces', [PieceController::class, 'index'])
-            ->name('versions.pieces.index');
-        Route::post('versions/{version}/pieces', [PieceController::class, 'store'])
-            ->name('versions.pieces.store');
+                    Route::post('submit-review', [PageVersionController::class, 'submitReview'])->name('submit-review');
+                    Route::post('approve', [PageVersionController::class, 'approve'])->name('approve');
+                    Route::post('reject', [PageVersionController::class, 'reject'])->name('reject');
+                    Route::post('publish', [PageVersionController::class, 'publish'])->name('publish');
+
+                    Route::get('pieces', [PieceController::class, 'index'])->name('pieces.index');
+                    Route::post('pieces', [PieceController::class, 'store'])->name('pieces.store');
+                });
+            }
+        });
+
+        Route::prefix('versions/{version}')->scopeBindings()->middleware(ResolvePageVersion::class)->group(function () {
+            Route::get('/', [PageVersionController::class, 'show'])->name('show');
+            Route::put('/', [PageVersionController::class, 'update'])->name('update');
+            Route::delete('/', [PageVersionController::class, 'destroy'])->name('destroy');
+
+            Route::post('submit-review', [PageVersionController::class, 'submitReview'])->name('submit-review');
+            Route::post('approve', [PageVersionController::class, 'approve'])->name('approve');
+            Route::post('reject', [PageVersionController::class, 'reject'])->name('reject');
+            Route::post('publish', [PageVersionController::class, 'publish'])->name('publish');
+
+            Route::get('pieces', [PieceController::class, 'index'])->name('pieces.index');
+            Route::post('pieces', [PieceController::class, 'store'])->name('pieces.store');
+        });
+
         Route::get('pieces/{piece}', [PieceController::class, 'show'])
             ->name('pieces.show');
         Route::put('pieces/{piece}', [PieceController::class, 'update'])
