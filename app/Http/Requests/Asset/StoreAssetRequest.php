@@ -37,6 +37,10 @@ class StoreAssetRequest extends FormRequest
                 'mimes:jpg,jpeg,png,gif,svg,webp,pdf,mp4,webm',
                 'max:51200',
             ],
+            /**
+             * Required when page_version_id is absent. Cannot be combined with page_version_id.
+             * The layout must belong to this website.
+             */
             'layout_id' => [
                 'required_without:page_version_id',
                 'prohibits:page_version_id',
@@ -50,6 +54,10 @@ class StoreAssetRequest extends FormRequest
                     }
                 },
             ],
+            /**
+             * Required when layout_id is absent. Cannot be combined with layout_id.
+             * The page version must belong to this website.
+             */
             'page_version_id' => [
                 'required_without:layout_id',
                 'prohibits:layout_id',

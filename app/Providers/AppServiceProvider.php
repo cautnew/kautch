@@ -24,8 +24,11 @@ use App\Repositories\Eloquent\RouteRepository;
 use App\Repositories\Eloquent\WebsiteRepository;
 use App\Repositories\Eloquent\WebsiteUserRepository;
 use App\Support\RequestAuditContext;
+use Dedoc\Scramble\Scramble;
+use Dedoc\Scramble\Support\Generator\OpenApi;
+use Dedoc\Scramble\Support\Generator\Tag;
 use Illuminate\Auth\Notifications\ResetPassword;
-use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
@@ -58,17 +61,32 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->registerGates();
         $this->registerPasswordResetUrl();
-        $this->registerAuthenticationViews();
+        $this->configureApiDocumentation();
     }
 
-    protected function registerAuthenticationViews(): void
+    protected function configureApiDocumentation(): void
     {
-        Fortify::loginView(fn () => Inertia::render('login'));
-        Fortify::requestPasswordResetLinkView(fn () => Inertia::render('forgot-password'));
-        Fortify::resetPasswordView(fn (Request $request) => Inertia::render('reset-password', [
-            'token' => $request->route('token'),
-            'email' => $request->input('email'),
-        ]));
+        Scramble::configure()
+            ->resolveOperationMethodsUsing(
+                fn (Route $route): array => array_values(array_diff($route->methods(), ['HEAD'])),
+            )
+            ->withDocumentTransformers(function (OpenApi $document): void {
+                $tags = [];
+
+                foreach ($document->tags as $tag) {
+                    $tags[$tag->name] = $tag;
+                }
+
+                foreach ($document->paths as $path) {
+                    foreach ($path->operations as $operation) {
+                        foreach ($operation->tags as $name) {
+                            $tags[$name] ??= new Tag($name);
+                        }
+                    }
+                }
+
+                $document->tags = array_values($tags);
+            });
     }
 
     /**

@@ -24,8 +24,8 @@ it('rejects unauthenticated access to every endpoint', function () {
     $version = makeEditableVersion($website);
     $piece = Piece::factory()->create(['page_version_id' => $version->id]);
 
-    $this->getJson(route('api.v1.versions.pieces.index', $version))->assertUnauthorized();
-    $this->postJson(route('api.v1.versions.pieces.store', $version), [])->assertUnauthorized();
+    $this->getJson(route('api.v1.versions.pieces.index', ['page' => $version->page_id, 'version' => $version]))->assertUnauthorized();
+    $this->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [])->assertUnauthorized();
     $this->getJson(route('api.v1.pieces.show', $piece))->assertUnauthorized();
     $this->putJson(route('api.v1.pieces.update', $piece), [])->assertUnauthorized();
     $this->deleteJson(route('api.v1.pieces.destroy', $piece))->assertUnauthorized();
@@ -39,10 +39,10 @@ it('lets any member view the tree and a single piece but denies outsiders', func
     $version = makeEditableVersion($website);
     $piece = Piece::factory()->create(['page_version_id' => $version->id]);
 
-    $this->actingAs($viewer)->getJson(route('api.v1.versions.pieces.index', $version))->assertSuccessful();
+    $this->actingAs($viewer)->getJson(route('api.v1.versions.pieces.index', ['page' => $version->page_id, 'version' => $version]))->assertSuccessful();
     $this->actingAs($viewer)->getJson(route('api.v1.pieces.show', $piece))->assertSuccessful();
 
-    $this->actingAs($outsider)->getJson(route('api.v1.versions.pieces.index', $version))->assertForbidden();
+    $this->actingAs($outsider)->getJson(route('api.v1.versions.pieces.index', ['page' => $version->page_id, 'version' => $version]))->assertForbidden();
     $this->actingAs($outsider)->getJson(route('api.v1.pieces.show', $piece))->assertForbidden();
 });
 
@@ -54,7 +54,7 @@ it('creates a root heading piece', function () {
     createWebsiteMembership($website, $owner, WebsiteRole::Owner);
     $version = makeEditableVersion($website);
 
-    $response = $this->actingAs($owner)->postJson(route('api.v1.versions.pieces.store', $version), [
+    $response = $this->actingAs($owner)->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
         'type' => 'heading',
         'content' => ['level' => 2, 'text' => 'Welcome'],
     ]);
@@ -74,7 +74,7 @@ it('validates heading requires level and text', function () {
     $version = makeEditableVersion($website);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), ['type' => 'heading', 'content' => []])
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), ['type' => 'heading', 'content' => []])
         ->assertUnprocessable()
         ->assertJson(['success' => false])
         ->assertJsonValidationErrors(['content.level', 'content.text']);
@@ -87,7 +87,7 @@ it('validates paragraph requires text', function () {
     $version = makeEditableVersion($website);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), ['type' => 'paragraph', 'content' => []])
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), ['type' => 'paragraph', 'content' => []])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['content.text']);
 });
@@ -99,12 +99,12 @@ it('validates list requires a non-empty items array', function () {
     $version = makeEditableVersion($website);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), ['type' => 'list', 'content' => []])
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), ['type' => 'list', 'content' => []])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['content.items']);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), [
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
             'type' => 'list',
             'content' => ['items' => ['One', 'Two']],
         ])
@@ -119,7 +119,7 @@ it('requires an asset_id for image pieces and validates it belongs to the websit
     $version = makeEditableVersion($website);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), ['type' => 'image'])
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), ['type' => 'image'])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['asset_id']);
 
@@ -127,7 +127,7 @@ it('requires an asset_id for image pieces and validates it belongs to the websit
     $foreignAsset = Asset::factory()->create(['website_id' => $otherWebsite->id]);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), [
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
             'type' => 'image',
             'asset_id' => $foreignAsset->id,
         ])
@@ -137,7 +137,7 @@ it('requires an asset_id for image pieces and validates it belongs to the websit
     $asset = Asset::factory()->create(['website_id' => $website->id]);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), [
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
             'type' => 'image',
             'asset_id' => $asset->id,
             'content' => ['caption' => 'A picture'],
@@ -153,7 +153,7 @@ it('creates container pieces (two_columns_wrapper, text_image_wrapper) without c
     $version = makeEditableVersion($website);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), ['type' => $type])
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), ['type' => $type])
         ->assertCreated()
         ->assertJsonPath('data.type', $type);
 })->with([
@@ -171,7 +171,7 @@ it('nests a child under a two_columns_wrapper using left/right slots', function 
     $wrapper = Piece::factory()->twoColumnsWrapper()->create(['page_version_id' => $version->id]);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), [
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
             'type' => 'paragraph',
             'parent_piece_id' => $wrapper->id,
             'slot' => 'left',
@@ -190,7 +190,7 @@ it('nests a child under a text_image_wrapper using text/image slots', function (
     $wrapper = Piece::factory()->textImageWrapper()->create(['page_version_id' => $version->id]);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), [
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
             'type' => 'paragraph',
             'parent_piece_id' => $wrapper->id,
             'slot' => 'text',
@@ -208,7 +208,7 @@ it('rejects a slot outside the parent container allowed slots', function () {
     $wrapper = Piece::factory()->twoColumnsWrapper()->create(['page_version_id' => $version->id]);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), [
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
             'type' => 'paragraph',
             'parent_piece_id' => $wrapper->id,
             'slot' => 'center',
@@ -226,7 +226,7 @@ it('rejects nesting a piece under a leaf type (non-container) parent', function 
     $leaf = Piece::factory()->paragraph()->create(['page_version_id' => $version->id]);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), [
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
             'type' => 'paragraph',
             'parent_piece_id' => $leaf->id,
             'slot' => 'left',
@@ -243,7 +243,7 @@ it('rejects a slot on a root-level piece', function () {
     $version = makeEditableVersion($website);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), [
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
             'type' => 'paragraph',
             'slot' => 'left',
             'content' => ['text' => 'Nope'],
@@ -259,7 +259,7 @@ it('creates a root piece assigned to a region declared by the layout', function 
     $version = makeEditableVersion($website);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), [
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
             'type' => 'paragraph',
             'region' => 'header',
             'content' => ['text' => 'In the header'],
@@ -275,7 +275,7 @@ it('rejects a region the layout does not declare', function () {
     $version = makeEditableVersion($website);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), [
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
             'type' => 'paragraph',
             'region' => 'not-a-real-region',
             'content' => ['text' => 'Nope'],
@@ -292,7 +292,7 @@ it('rejects a region on a non-root piece', function () {
     $wrapper = Piece::factory()->twoColumnsWrapper()->create(['page_version_id' => $version->id]);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), [
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
             'type' => 'paragraph',
             'parent_piece_id' => $wrapper->id,
             'slot' => 'left',
@@ -312,7 +312,7 @@ it('rejects a parent_piece_id belonging to a different page version', function (
     $foreignWrapper = Piece::factory()->twoColumnsWrapper()->create(['page_version_id' => $otherVersion->id]);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), [
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
             'type' => 'paragraph',
             'parent_piece_id' => $foreignWrapper->id,
             'slot' => 'left',
@@ -328,19 +328,19 @@ it('auto-increments sibling position when not provided, independently per parent
     createWebsiteMembership($website, $owner, WebsiteRole::Owner);
     $version = makeEditableVersion($website);
 
-    $first = $this->actingAs($owner)->postJson(route('api.v1.versions.pieces.store', $version), [
+    $first = $this->actingAs($owner)->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
         'type' => 'paragraph',
         'content' => ['text' => 'First'],
     ])->assertJsonPath('data.position', 0);
 
-    $this->actingAs($owner)->postJson(route('api.v1.versions.pieces.store', $version), [
+    $this->actingAs($owner)->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
         'type' => 'paragraph',
         'content' => ['text' => 'Second'],
     ])->assertJsonPath('data.position', 1);
 
     $wrapper = Piece::factory()->twoColumnsWrapper()->create(['page_version_id' => $version->id]);
 
-    $this->actingAs($owner)->postJson(route('api.v1.versions.pieces.store', $version), [
+    $this->actingAs($owner)->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
         'type' => 'paragraph',
         'parent_piece_id' => $wrapper->id,
         'slot' => 'left',
@@ -355,7 +355,7 @@ it('honors an explicit position when provided', function () {
     $version = makeEditableVersion($website);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), [
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
             'type' => 'paragraph',
             'content' => ['text' => 'Pinned'],
             'position' => 42,
@@ -378,7 +378,7 @@ it('returns the full recursive tree for a version in a single pieces query', fun
 
     DB::enableQueryLog();
 
-    $response = $this->actingAs($viewer)->getJson(route('api.v1.versions.pieces.index', $version));
+    $response = $this->actingAs($viewer)->getJson(route('api.v1.versions.pieces.index', ['page' => $version->page_id, 'version' => $version]));
 
     $pieceQueries = collect(DB::getQueryLog())
         ->filter(fn (array $entry) => str_contains($entry['query'], 'pieces'));
@@ -541,7 +541,7 @@ it('only allows owner, admin and editor to create, update and delete pieces', fu
     createWebsiteMembership($website, $actor, $role);
     $version = makeEditableVersion($website);
 
-    $createResponse = $this->actingAs($actor)->postJson(route('api.v1.versions.pieces.store', $version), [
+    $createResponse = $this->actingAs($actor)->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
         'type' => 'paragraph',
         'content' => ['text' => 'Hello'],
     ]);
@@ -573,7 +573,7 @@ it('never allows mutating pieces once the page version is no longer editable', f
     $piece = Piece::factory()->paragraph()->create(['page_version_id' => $version->id]);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), ['type' => 'paragraph', 'content' => ['text' => 'x']])
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), ['type' => 'paragraph', 'content' => ['text' => 'x']])
         ->assertForbidden();
 
     $this->actingAs($owner)
@@ -614,7 +614,7 @@ it('never resolves a piece created directly with an invalid type value', functio
     $version = makeEditableVersion($website);
 
     $this->actingAs($owner)
-        ->postJson(route('api.v1.versions.pieces.store', $version), ['type' => 'video', 'content' => []])
+        ->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), ['type' => 'video', 'content' => []])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['type']);
 });

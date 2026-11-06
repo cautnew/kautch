@@ -9,6 +9,7 @@ use App\Http\Requests\Piece\StorePieceRequest;
 use App\Http\Requests\Piece\UpdatePieceRequest;
 use App\Http\Resources\PieceResource;
 use App\Http\Responses\ApiResponse;
+use App\Models\Page;
 use App\Models\PageVersion;
 use App\Models\Piece;
 use App\Services\PieceService;
@@ -31,7 +32,7 @@ class PieceController extends Controller
      * (PageVersionPolicy) instead of the PiecePolicy::viewAny() we want here.
      */
     #[Authorize('viewAny', [Piece::class, 'version'])]
-    public function index(PageVersion $version): JsonResponse
+    public function index(Page $page, PageVersion $version): JsonResponse
     {
         return ApiResponse::success(PieceResource::collection($this->pieces->tree($version)));
     }
@@ -41,7 +42,7 @@ class PieceController extends Controller
      * parent via parent_piece_id — only while the version is still editable).
      */
     #[Authorize('create', [Piece::class, 'version'])]
-    public function store(StorePieceRequest $request, PageVersion $version): JsonResponse
+    public function store(StorePieceRequest $request, Page $page, PageVersion $version): JsonResponse
     {
         $piece = $this->pieces->create($version, $request->user(), CreatePieceData::fromRequest($request));
 

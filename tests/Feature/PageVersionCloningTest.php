@@ -42,7 +42,7 @@ it('creating a piece against a published version clones it into a new draft and 
     $version = makePublishedVersion($website, $layout, $page, $owner);
     $existingPiece = Piece::factory()->paragraph()->create(['page_version_id' => $version->id]);
 
-    $response = $this->actingAs($owner)->postJson(route('api.v1.versions.pieces.store', $version), [
+    $response = $this->actingAs($owner)->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
         'type' => 'heading',
         'content' => ['level' => 1, 'text' => 'New heading'],
     ]);
@@ -74,7 +74,7 @@ it('creating a nested piece against a published version remaps parent_piece_id t
     $version = makePublishedVersion($website, $layout, $page, $owner);
     $wrapper = Piece::factory()->twoColumnsWrapper()->create(['page_version_id' => $version->id]);
 
-    $response = $this->actingAs($owner)->postJson(route('api.v1.versions.pieces.store', $version), [
+    $response = $this->actingAs($owner)->postJson(route('api.v1.versions.pieces.store', ['page' => $version->page_id, 'version' => $version]), [
         'type' => 'paragraph',
         'parent_piece_id' => $wrapper->id,
         'slot' => 'left',
@@ -221,7 +221,7 @@ it('updating seo on a published version clones it and leaves the published seo u
     $page = Page::factory()->create(['website_id' => $website->id, 'layout_id' => $layout->id]);
     $version = makePublishedVersion($website, $layout, $page, $owner);
 
-    $response = $this->actingAs($owner)->putJson(route('api.v1.versions.update', $version), [
+    $response = $this->actingAs($owner)->putJson(route('api.v1.versions.update', ['page' => $version->page_id, 'version' => $version]), [
         'seo' => ['title' => 'New title', 'description' => 'New description'],
     ]);
 
@@ -243,7 +243,7 @@ it('updating the layout on a published version clones it and regenerates the lay
     $page = Page::factory()->create(['website_id' => $website->id, 'layout_id' => $layout->id]);
     $version = makePublishedVersion($website, $layout, $page, $owner);
 
-    $response = $this->actingAs($owner)->putJson(route('api.v1.versions.update', $version), [
+    $response = $this->actingAs($owner)->putJson(route('api.v1.versions.update', ['page' => $version->page_id, 'version' => $version]), [
         'layout_id' => $newLayout->id,
     ]);
 
@@ -269,7 +269,7 @@ it('rejects seo/layout updates while a version is under_review or approved (no c
     $countBefore = PageVersion::count();
 
     $this->actingAs($owner)
-        ->putJson(route('api.v1.versions.update', $version), ['seo' => ['title' => 'Nope']])
+        ->putJson(route('api.v1.versions.update', ['page' => $version->page_id, 'version' => $version]), ['seo' => ['title' => 'Nope']])
         ->assertForbidden();
 
     expect(PageVersion::count())->toBe($countBefore);

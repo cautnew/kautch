@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\PageVersionStatus;
 use App\Enums\WebsiteRole;
+use App\Models\Asset;
 use App\Models\AuditLog;
 use App\Models\Layout;
 use App\Models\Page;
@@ -145,7 +145,7 @@ it('records an upload audit entry (not a generic create) when an asset is upload
     ]);
     $response->assertCreated();
 
-    $log = AuditLog::where('auditable_type', \App\Models\Asset::class)
+    $log = AuditLog::where('auditable_type', Asset::class)
         ->where('auditable_id', $response->json('data.id'))
         ->sole();
 
@@ -163,7 +163,7 @@ it('records approve, then a separate reject, as distinct action names', function
     $version = PageVersion::factory()->underReview()->create(['page_id' => $page->id, 'layout_id' => $layout->id]);
 
     $this->actingAs($qa)
-        ->postJson(route('api.v1.versions.approve', $version), ['notes' => 'ok'])
+        ->postJson(route('api.v1.versions.approve', ['page' => $version->page_id, 'version' => $version]), ['notes' => 'ok'])
         ->assertSuccessful();
 
     $approveLog = AuditLog::where('action', 'approve')
@@ -185,7 +185,7 @@ it('records a publish action when an admin publishes an approved version', funct
     $version = PageVersion::factory()->approved()->create(['page_id' => $page->id, 'layout_id' => $layout->id]);
 
     $this->actingAs($admin)
-        ->postJson(route('api.v1.versions.publish', $version))
+        ->postJson(route('api.v1.versions.publish', ['page' => $version->page_id, 'version' => $version]))
         ->assertSuccessful();
 
     $log = AuditLog::where('action', 'publish')
@@ -207,7 +207,7 @@ it('records a reject action with a generic update fallback for unrelated status 
     $version = PageVersion::factory()->underReview()->create(['page_id' => $page->id, 'layout_id' => $layout->id]);
 
     $this->actingAs($qa)
-        ->postJson(route('api.v1.versions.reject', $version), ['notes' => 'needs work'])
+        ->postJson(route('api.v1.versions.reject', ['page' => $version->page_id, 'version' => $version]), ['notes' => 'needs work'])
         ->assertSuccessful();
 
     expect(AuditLog::where('action', 'reject')->where('auditable_id', $version->id)->exists())->toBeTrue();
@@ -215,7 +215,7 @@ it('records a reject action with a generic update fallback for unrelated status 
     // Submitting the now-rejected version back for review has no dedicated
     // action name requested — it should fall back to generic "update".
     $this->actingAs($editor)
-        ->postJson(route('api.v1.versions.submit-review', $version))
+        ->postJson(route('api.v1.versions.submit-review', ['page' => $version->page_id, 'version' => $version]))
         ->assertSuccessful();
 
     $updateLog = AuditLog::where('action', 'update')

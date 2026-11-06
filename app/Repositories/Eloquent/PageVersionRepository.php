@@ -2,8 +2,10 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Enums\ReviewDecision;
 use App\Models\Page;
 use App\Models\PageVersion;
+use App\Models\PageVersionReview;
 use App\Repositories\Contracts\PageVersionRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +14,22 @@ final class PageVersionRepository implements PageVersionRepositoryInterface
 {
     public function paginateForPage(Page $page, int $perPage = 15): LengthAwarePaginator
     {
-        return $page->versions()->with('reviews')->latest('version_number')->paginate($perPage);
+        return $page->versions()
+            ->select([
+                'id', 'page_id', 'layout_id', 'version_number', 'status',
+                'created_by', 'updated_by', 'created_at', 'updated_at',
+            ])
+            ->addSelect([
+                'approved_by' => PageVersionReview::query()
+                    ->select('qa_user_id')
+                    ->whereColumn('page_version_id', 'page_versions.id')
+                    ->where('decision', ReviewDecision::Approved)
+                    ->latest()
+                    ->latest('id')
+                    ->limit(1),
+            ])
+            ->latest('version_number')
+            ->paginate($perPage);
     }
 
     /**

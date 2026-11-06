@@ -19,6 +19,8 @@ class AuthenticatedSessionController extends Controller
 
     /**
      * Log the user in and issue a new API token.
+     *
+     * @response array{success: bool, message: string, data: array{user: UserResource, token: string, token_type: string}}
      */
     public function store(LoginRequest $request): JsonResponse
     {

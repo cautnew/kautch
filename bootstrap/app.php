@@ -4,7 +4,7 @@ use App\Exceptions\RouteLoopException;
 use App\Exceptions\TooManyRedirectsException;
 use App\Http\Middleware\CaptureAuditContext;
 use App\Http\Middleware\EnsureWebsiteRole;
-use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\ResolvePageVersion;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -13,6 +13,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -34,6 +35,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'website.role' => EnsureWebsiteRole::class,
         ]);
+
+        $middleware->appendToPriorityList(
+            after: SubstituteBindings::class,
+            append: ResolvePageVersion::class,
+        );
 
         // Every request, public or authenticated, may end up producing an
         // audit entry — capture IP/User-Agent unconditionally up front.

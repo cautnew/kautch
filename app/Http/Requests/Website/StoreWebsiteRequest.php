@@ -25,7 +25,9 @@ class StoreWebsiteRequest extends FormRequest
     public function rules(): array
     {
         return [
+            /** @example My website */
             'name' => ['required', 'string', 'max:255'],
+            /** @example example.com */
             'domain' => [
                 'required',
                 'string',
